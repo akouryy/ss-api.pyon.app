@@ -20,14 +20,18 @@ var db *sqlx.DB
 type Book struct {
 	Id        string
 	Title     string
-	CreatedAt time.Time
+	CreatedAt time.Time `db:"created_at"`
 }
 
 func booksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	books := []Book{}
-	db.Select(&books, "SELECT * FROM books ORDER BY created_at DESC LIMIT 10")
+	err := db.Select(&books, "SELECT * FROM books ORDER BY created_at DESC LIMIT 10;")
+	if err != nil {
+		fmt.Fprintf(w, "error %s", err.Error())
+		return
+	}
 
 	j, err := json.Marshal(books)
 	if err != nil {
