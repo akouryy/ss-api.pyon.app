@@ -13,29 +13,41 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
+	"golang.org/x/crypto/bcrypt"
 )
 
-var db *sqlx.DB
+var dbx *sqlx.DB
+
+type User struct {
+	Id       int
+	Nickname string
+	Password []byte
+}
 
 type Book struct {
-	Id        string
+	Id        int
 	Title     string
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func booksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
+func BooksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	user, err := Authenticate(r)
+	if ReportError(w, err) {
+		return
+	}
+	log.Println(user.Nickname)
+
 	books := []Book{}
-	err := db.Select(&books, "SELECT * FROM books ORDER BY created_at DESC LIMIT 10;")
-	if err != nil {
-		fmt.Fprintf(w, "error %s", err.Error())
+	if ReportError(w,
+		dbx.Select(&books, "SELECT * FROM books ORDER BY created_at DESC LIMIT 10;"),
+	) {
 		return
 	}
 
 	j, err := json.Marshal(books)
-	if err != nil {
-		fmt.Fprintf(w, "error %s", err.Error())
+	if ReportError(w, err) {
 		return
 	}
 	io.WriteString(w, string(j))
@@ -44,11 +56,14 @@ func booksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 func main() {
 	var err error
 
-	db, err = sqlx.Connect("mysql", os.Getenv("DATABASE_URL"))
+	dbx, err = sqlx.Connect("mysql", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	goji.Get("/books", booksHandler)
+	goji.Post("/books", BooksHandler)
 	goji.Serve()
+
+	a, err := bcrypt.GenerateFromPassword([]byte("OYXgulIdzvqcrT7rusVGJtMEHspIFDIwB6qltLSEXjiS4wMnEUDcVLMi6FXLRC2Yo6DKej"), 4)
+	fmt.Println(string(a), err)
 }
