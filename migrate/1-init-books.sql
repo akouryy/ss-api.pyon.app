@@ -1,7 +1,13 @@
+ALTER DATABASE ________ CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+--> SET NAMES utf8mb4 COLLATE utf8mb4_bin;
+--> SET collation_server = utf8mb4_bin;
+--> SHOW VARIABLES LIKE '%character%'; */
+--> SHOW VARIABLES LIKE '%collation%'; */
+
 CREATE TABLE books (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(300) NOT NULL,
   created_at DATETIME NOT NULL
 )
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_bin;
+  /*CHARACTER SET utf8mb4
+  COLLATE utf8mb4_bin*/;
