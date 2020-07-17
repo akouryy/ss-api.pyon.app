@@ -32,3 +32,24 @@ CREATE TABLE book_authors (
   FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
   UNIQUE (book_id, author_id)
 );
+
+CREATE TABLE episodes (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(300) NOT NULL,
+  book_id INT NOT NULL,
+  indexnum INT NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+  UNIQUE (book_id, title),
+  UNIQUE (book_id, indexnum)
+);
+
+CREATE TABLE sections (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  content MEDIUMTEXT NOT NULL,
+  episode_id INT NOT NULL,
+  indexnum INT NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE,
+  UNIQUE (episode_id, indexnum)
+) ROW_FORMAT=DYNAMIC;

@@ -10,6 +10,28 @@ import (
 	"github.com/zenazn/goji/web"
 )
 
+type reqBook struct {
+	BookId int `json:"bookID"`
+}
+
+func BookHandler(
+	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
+	dbx *sqlx.DB, body []byte, _ model.User,
+) {
+	var req reqBook
+	err := json.Unmarshal(body, &req)
+	if hutil.ReportError(writer, err) {
+		return
+	}
+
+	book, err := model.GetBook(dbx, req.BookId)
+	if hutil.ReportError(writer, err) {
+		return
+	}
+
+	hutil.RenderJSON(writer, book)
+}
+
 func BooksHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,

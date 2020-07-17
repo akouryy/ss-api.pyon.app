@@ -13,6 +13,7 @@ type Book struct {
 	Title     string    `json:"title"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Authors   []Author  `json:"authors"`
+	Episodes  []Episode `json:"episodes"`
 }
 
 type bookAndAuthor struct {
@@ -20,24 +21,42 @@ type bookAndAuthor struct {
 	Author Author
 }
 
+func GetBook(dbx *sqlx.DB, bookId int) (Book, error) {
+	var book Book
+	err := dbx.Get(&book, `SELECT * FROM books WHERE id = ?`, bookId)
+	if err != nil {
+		return Book{}, err
+	}
+	err = dbx.Select(&book.Authors, `
+		SELECT authors.* FROM authors
+		INNER JOIN
+			(SELECT * FROM book_authors WHERE book_id = ?) AS book_authors
+			ON authors.id = book_authors.author_id
+	`, bookId)
+	if err != nil {
+		return Book{}, err
+	}
+	book.Episodes, err = GetEpisodes(dbx, bookId)
+	if err != nil {
+		return Book{}, err
+	}
+	return book, nil
+}
+
 func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 	booksMap := map[int]*Book{}
 
 	rows, err := dbx.Queryx(`
 		SELECT
-			books.id AS "book.id",
-			books.title AS "book.title",
-			books.created_at AS "book.created_at",
-			authors.id AS "author.id",
-			authors.name AS "author.name",
-			authors.url AS "author.url",
-			authors.created_at AS "author.created_at"
+			books.id AS "book.id", books.title AS "book.title", books.created_at AS "book.created_at",
+			authors.id AS "author.id", authors.name AS "author.name", 
+				authors.url AS "author.url", authors.created_at AS "author.created_at"
 		FROM
 			(SELECT * FROM books ORDER BY created_at DESC LIMIT 10) AS books
-		INNER /*LEFT*/ JOIN
-			book_authors ON books.id = book_authors.book_id
-		INNER /*LEFT*/ JOIN
-			authors ON authors.id = book_authors.author_id
+		INNER /*LEFT*/ JOIN book_authors
+			ON books.id = book_authors.book_id
+		INNER /*LEFT*/ JOIN authors
+			ON authors.id = book_authors.author_id
 	`)
 	if err != nil {
 		return nil, err
@@ -72,7 +91,7 @@ func AddBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
 
 func RemoveBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
 	return mutil.Transaction(dbx, func(tx *sqlx.Tx) error {
-		_, err := dbx.Exec(`SELECT 0 FROM books WHERE id = ? FOR UPDATE`, bookId)
+		_, err := dbx.Exec(`SELECT id FROM books WHERE id = ? FOR UPDATE`, bookId)
 		if err != nil {
 			return err
 		}
