@@ -1,9 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +10,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var dbx *sqlx.DB
@@ -30,14 +26,16 @@ type Book struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func BooksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	user, err := Authenticate(r)
+func BooksHandler(c web.C, w http.ResponseWriter, httpReq *http.Request) {
+	body, err := ReadWholeBody(httpReq)
 	if ReportError(w, err) {
 		return
 	}
-	log.Println(user.Nickname)
+
+	_, err = Authenticate(body)
+	if ReportError(w, err) {
+		return
+	}
 
 	books := []Book{}
 	if ReportError(w,
@@ -46,11 +44,7 @@ func BooksHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j, err := json.Marshal(books)
-	if ReportError(w, err) {
-		return
-	}
-	io.WriteString(w, string(j))
+	RenderJSON(w, books)
 }
 
 func main() {
@@ -61,9 +55,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	goji.Post("/books", BooksHandler)
+	goji.Post("/book", BooksHandler)
+	goji.Post("/author", AuthorsHandler)
+	goji.Post("/author/new", NewAuthorHandler)
 	goji.Serve()
-
-	a, err := bcrypt.GenerateFromPassword([]byte("OYXgulIdzvqcrT7rusVGJtMEHspIFDIwB6qltLSEXjiS4wMnEUDcVLMi6FXLRC2Yo6DKej"), 4)
-	fmt.Println(string(a), err)
 }
