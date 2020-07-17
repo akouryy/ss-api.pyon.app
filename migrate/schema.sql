@@ -24,3 +24,10 @@ CREATE TABLE authors (
   url VARCHAR(300) NOT NULL,
   created_at DATETIME NOT NULL
 );
+
+CREATE TABLE book_authors (
+  book_id INT NOT NULL,
+  author_id INT NOT NULL,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+  FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
+);

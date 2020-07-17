@@ -7,10 +7,10 @@ import (
 )
 
 type Author struct {
-	Id        int
-	Name      string
-	URL       string
-	CreatedAt time.Time `db:"created_at"`
+	Id        int       `json:"id"`
+	Name      string    `json:"name"`
+	URL       string    `json:"url"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 }
 
 func GetAuthors(dbx *sqlx.DB) ([]Author, error) {
