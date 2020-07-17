@@ -29,5 +29,7 @@ func main() {
 	goji.Post("/book/author/new", hutil.Wrap(dbx, handler.NewBookAuthorHandler))
 	goji.Post("/book/author/delete", hutil.Wrap(dbx, handler.DeleteBookAuthorHandler))
 	goji.Post("/episode/show", hutil.Wrap(dbx, handler.EpisodeHandler))
+	goji.Post("/episode/new", hutil.Wrap(dbx, handler.NewEpisodeHandler))
+	goji.Post("/section/new", hutil.Wrap(dbx, handler.NewSectionHandler))
 	goji.Serve()
 }

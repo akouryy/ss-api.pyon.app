@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/akouryy/ss-api.pyon.app/src/model/mutil"
@@ -78,6 +79,9 @@ func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 	for _, book := range booksMap {
 		books = append(books, *book)
 	}
+	sort.Slice(books, func(i, j int) bool {
+		return books[i].CreatedAt. /*IsAfter*/ After(books[j].CreatedAt)
+	})
 	return books, nil
 }
 

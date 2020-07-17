@@ -16,7 +16,7 @@ type reqNewAuthor struct {
 	URL  string `json:"url"`
 }
 
-func (author reqNewAuthor) validate() error {
+func (author *reqNewAuthor) validate() error {
 	if author.Name == "" {
 		return errors.New("Author name must be nonempty.")
 	}

@@ -21,6 +21,7 @@ func GetEpisode(dbx *sqlx.DB, episodeId int) (Episode, error) {
 	if err != nil {
 		return Episode{}, err
 	}
+	episode.Sections = []Section{}
 	err = dbx.Select(&episode.Sections,
 		`SELECT * FROM sections WHERE episode_id = ? ORDER BY indexnum`, episodeId)
 	if err != nil {
@@ -37,4 +38,12 @@ func GetEpisodes(dbx *sqlx.DB, bookId int) ([]Episode, error) {
 		return nil, err
 	}
 	return episodes, nil
+}
+
+func CreateEpisode(dbx *sqlx.DB, title string, bookId, indexnum int) error {
+	_, err := dbx.Exec(
+		`INSERT INTO episodes(title, book_id, indexnum, created_at) VALUES (?, ?, ?, NOW())`,
+		title, bookId, indexnum,
+	)
+	return err
 }
