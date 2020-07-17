@@ -7,6 +7,7 @@ import (
 
 	"github.com/akouryy/ss-api.pyon.app/src/handler/hutil"
 	"github.com/akouryy/ss-api.pyon.app/src/model"
+	"github.com/jmoiron/sqlx"
 	"github.com/zenazn/goji/web"
 )
 
@@ -31,19 +32,10 @@ func (author reqNewAuthor) validate() error {
 	return nil
 }
 
-func AuthorsHandler(ctx web.C, writer http.ResponseWriter, httpReq *http.Request) {
-	dbx := hutil.DBX(&ctx)
-
-	body, err := hutil.ReadWholeBody(httpReq)
-	if hutil.ReportError(writer, err) {
-		return
-	}
-
-	_, err = hutil.Authenticate(body, dbx)
-	if hutil.ReportError(writer, err) {
-		return
-	}
-
+func AuthorsHandler(
+	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
+	dbx *sqlx.DB, body []byte, _ model.User,
+) {
 	authors, err := model.GetAuthors(dbx)
 	if hutil.ReportError(writer, err) {
 		return
@@ -52,21 +44,12 @@ func AuthorsHandler(ctx web.C, writer http.ResponseWriter, httpReq *http.Request
 	hutil.RenderJSON(writer, authors)
 }
 
-func NewAuthorHandler(ctx web.C, writer http.ResponseWriter, httpReq *http.Request) {
-	dbx := hutil.DBX(&ctx)
-
-	body, err := hutil.ReadWholeBody(httpReq)
-	if hutil.ReportError(writer, err) {
-		return
-	}
-
-	_, err = hutil.Authenticate(body, dbx)
-	if hutil.ReportError(writer, err) {
-		return
-	}
-
+func NewAuthorHandler(
+	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
+	dbx *sqlx.DB, body []byte, _ model.User,
+) {
 	var req reqNewAuthor
-	err = json.Unmarshal(body, &req)
+	err := json.Unmarshal(body, &req)
 	if hutil.ReportError(writer, err) {
 		return
 	}

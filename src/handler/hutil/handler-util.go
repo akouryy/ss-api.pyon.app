@@ -100,3 +100,21 @@ func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 
 	return user, nil
 }
+
+func Wrap(
+	dbx *sqlx.DB, raw func(web.C, http.ResponseWriter, *http.Request, *sqlx.DB, []byte, model.User),
+) func(web.C, http.ResponseWriter, *http.Request) {
+	return func(ctx web.C, writer http.ResponseWriter, httpReq *http.Request) {
+		body, err := ReadWholeBody(httpReq)
+		if ReportError(writer, err) {
+			return
+		}
+
+		user, err := Authenticate(body, dbx)
+		if ReportError(writer, err) {
+			return
+		}
+
+		raw(ctx, writer, httpReq, dbx, body, user)
+	}
+}

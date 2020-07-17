@@ -21,9 +21,9 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	goji.Use(hutil.SetDBXMiddleware(dbx))
-	goji.Post("/book", handler.BooksHandler)
-	goji.Post("/author", handler.AuthorsHandler)
-	goji.Post("/author/new", handler.NewAuthorHandler)
+	// goji.Use(hutil.SetDBXMiddleware(dbx))
+	goji.Post("/author", hutil.Wrap(dbx, handler.AuthorsHandler))
+	goji.Post("/author/new", hutil.Wrap(dbx, handler.NewAuthorHandler))
+	goji.Post("/book", hutil.Wrap(dbx, handler.BooksHandler))
 	goji.Serve()
 }
