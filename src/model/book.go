@@ -1,8 +1,10 @@
 package model
 
 import (
+	"errors"
 	"time"
 
+	"github.com/akouryy/ss-api.pyon.app/src/model/mutil"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,4 +60,36 @@ func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 		books = append(books, *book)
 	}
 	return books, nil
+}
+
+func AddBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
+	_, err := dbx.Exec(
+		`INSERT INTO book_authors(book_id, author_id) VALUES (?, ?)`,
+		bookId, authorId,
+	)
+	return err
+}
+
+func RemoveBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
+	return mutil.Transaction(dbx, func(tx *sqlx.Tx) error {
+		_, err := dbx.Exec(`SELECT 0 FROM books WHERE id = ? FOR UPDATE`, bookId)
+		if err != nil {
+			return err
+		}
+
+		var cnt int
+		err = dbx.Get(&cnt, `SELECT COUNT(*) FROM book_authors WHERE book_id = ?`, bookId)
+		if err != nil {
+			return err
+		}
+		if cnt <= 1 {
+			return errors.New("There must remain some authors for this book.")
+		}
+
+		_, err = dbx.Exec(
+			`DELETE FROM book_authors WHERE book_id = ? AND author_id = ?`, bookId, authorId,
+		)
+
+		return err
+	})
 }

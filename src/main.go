@@ -22,8 +22,10 @@ func main() {
 	}
 
 	// goji.Use(hutil.SetDBXMiddleware(dbx))
-	goji.Post("/author", hutil.Wrap(dbx, handler.AuthorsHandler))
+	goji.Post("/author/list", hutil.Wrap(dbx, handler.AuthorsHandler))
 	goji.Post("/author/new", hutil.Wrap(dbx, handler.NewAuthorHandler))
-	goji.Post("/book", hutil.Wrap(dbx, handler.BooksHandler))
+	goji.Post("/book/list", hutil.Wrap(dbx, handler.BooksHandler))
+	goji.Post("/book/author/new", hutil.Wrap(dbx, handler.NewBookAuthorHandler))
+	goji.Post("/book/author/delete", hutil.Wrap(dbx, handler.DeleteBookAuthorHandler))
 	goji.Serve()
 }
