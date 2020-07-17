@@ -1,4 +1,4 @@
-package main
+package hutil
 
 import (
 	"database/sql"
@@ -10,8 +10,26 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/akouryy/ss-api.pyon.app/src/model"
+	"github.com/jmoiron/sqlx"
+	"github.com/zenazn/goji/web"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func SetDBXMiddleware(dbx *sqlx.DB) func(*web.C, http.Handler) http.Handler {
+	return func(ctx *web.C, httpHandler http.Handler) http.Handler {
+		fn := func(writer http.ResponseWriter, httpReq *http.Request) {
+			ctx.Env["dbx"] = dbx
+			httpHandler.ServeHTTP(writer, httpReq)
+		}
+
+		return http.HandlerFunc(fn)
+	}
+}
+
+func DBX(ctx *web.C) *sqlx.DB {
+	return ctx.Env["dbx"].(*sqlx.DB)
+}
 
 func ReadWholeBody(httpReq *http.Request) ([]byte, error) {
 	size, err := strconv.Atoi(httpReq.Header.Get("Content-Length"))
@@ -56,28 +74,28 @@ type reqAuth struct {
 	Password string `json:"authPassword"`
 }
 
-func Authenticate(body []byte) (User, error) {
+func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 	var req reqAuth
 	err := json.Unmarshal(body, &req)
 	if err != nil {
-		return User{}, err
+		return model.User{}, err
 	}
 
-	var user User
+	var user model.User
 	err = dbx.Get(&user, "SELECT * FROM users WHERE nickname = ?", req.Nickname)
 	if err == sql.ErrNoRows {
-		return User{}, errors.New("Wrong nickname or password")
+		return model.User{}, errors.New("Wrong nickname or password")
 	} else if err != nil {
-		return User{}, err
+		return model.User{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return User{}, errors.New("Wrong nickname or password")
+		return model.User{}, errors.New("Wrong nickname or password")
 	}
 	if err != nil {
 		log.Println(err)
-		return User{}, err
+		return model.User{}, err
 	}
 
 	return user, nil
