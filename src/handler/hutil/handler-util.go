@@ -16,10 +16,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SetDBXMiddleware(dbx *sqlx.DB) func(*web.C, http.Handler) http.Handler {
+var allowedOrigins = map[string]struct{}{
+	"http://localhost:3000": struct{}{},
+	"http://localhost:3001": struct{}{},
+	"https://ss.pyon.app":   struct{}{},
+}
+
+func CORSMiddleware() func(*web.C, http.Handler) http.Handler {
 	return func(ctx *web.C, httpHandler http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, httpReq *http.Request) {
-			ctx.Env["dbx"] = dbx
+			origin := httpReq.Header.Get("Origin")
+			if _, ok := allowedOrigins[origin]; ok {
+				writer.Header().Set("Access-Control-Allow-Origin", origin)
+				writer.Header().Set("Access-Control-Allow-Headers", "*")
+				writer.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
+			}
+
 			httpHandler.ServeHTTP(writer, httpReq)
 		}
 
@@ -74,6 +86,16 @@ type reqAuth struct {
 	Password string `json:"authPassword"`
 }
 
+func (req *reqAuth) validate() error {
+	if req.Nickname == "" {
+		return errors.New("Authenticate nickname must be nonempty.")
+	}
+	if req.Password == "" {
+		return errors.New("Authenticate password must be nonempty.")
+	}
+	return nil
+}
+
 func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 	var req reqAuth
 	err := json.Unmarshal(body, &req)
@@ -81,17 +103,22 @@ func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 		return model.User{}, err
 	}
 
+	err = req.validate()
+	if err != nil {
+		return model.User{}, err
+	}
+
 	var user model.User
 	err = dbx.Get(&user, "SELECT * FROM users WHERE nickname = ?", req.Nickname)
 	if err == sql.ErrNoRows {
-		return model.User{}, errors.New("Wrong nickname or password")
+		return model.User{}, errors.New("Wrong nickname or password.")
 	} else if err != nil {
 		return model.User{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return model.User{}, errors.New("Wrong nickname or password")
+		return model.User{}, errors.New("Wrong nickname or password.")
 	}
 	if err != nil {
 		log.Println(err)

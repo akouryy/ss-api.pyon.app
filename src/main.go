@@ -22,6 +22,7 @@ func main() {
 	}
 
 	// goji.Use(hutil.SetDBXMiddleware(dbx))
+	goji.Use(hutil.CORSMiddleware())
 	goji.Post("/author/list", hutil.Wrap(dbx, handler.AuthorsHandler))
 	goji.Post("/author/new", hutil.Wrap(dbx, handler.NewAuthorHandler))
 	goji.Post("/book/show", hutil.Wrap(dbx, handler.BookHandler))
