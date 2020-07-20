@@ -12,24 +12,24 @@ import (
 )
 
 type reqEpisode struct {
-	EpisodeId int `json:"episodeID"`
+	EpisodeID int `json:"episodeID"`
 }
 
 type reqNewEpisode struct {
 	Title    string `json:"title"`
-	BookId   int    `json:"bookID"`
+	BookID   int    `json:"bookID"`
 	IndexNum int    `json:"index"`
 }
 
 func (episode *reqNewEpisode) validate() error {
 	if episode.Title == "" {
-		return errors.New("Episode title must be nonempty.")
+		return errors.New("episode title must be nonempty")
 	}
 	if 100 < len(episode.Title) {
-		return errors.New("Episode title must be at most 100 characters.")
+		return errors.New("episode title must be at most 100 characters")
 	}
 	if episode.IndexNum <= 0 {
-		return errors.New("Episode index must be at least 1.")
+		return errors.New("episode index must be at least 1")
 	}
 	return nil
 }
@@ -44,12 +44,12 @@ func EpisodeHandler(
 		return
 	}
 
-	book, err := model.GetEpisode(dbx, req.EpisodeId)
+	bookEpi, err := model.GetEpisodeWithBook(dbx, req.EpisodeID)
 	if hutil.ReportError(writer, err) {
 		return
 	}
 
-	hutil.RenderJSON(writer, book)
+	hutil.RenderJSON(writer, bookEpi)
 }
 
 func NewEpisodeHandler(
@@ -67,7 +67,7 @@ func NewEpisodeHandler(
 		return
 	}
 
-	err = model.CreateEpisode(dbx, req.Title, req.BookId, req.IndexNum)
+	err = model.CreateEpisode(dbx, req.Title, req.BookID, req.IndexNum)
 	if hutil.ReportError(writer, err) {
 		return
 	}

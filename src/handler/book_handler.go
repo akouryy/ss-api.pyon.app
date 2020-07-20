@@ -11,7 +11,7 @@ import (
 )
 
 type reqBook struct {
-	BookId int `json:"bookID"`
+	BookID int `json:"bookID"`
 }
 
 func BookHandler(
@@ -24,7 +24,7 @@ func BookHandler(
 		return
 	}
 
-	book, err := model.GetBook(dbx, req.BookId)
+	book, err := model.GetBook(dbx, req.BookID, true)
 	if hutil.ReportError(writer, err) {
 		return
 	}
@@ -45,8 +45,8 @@ func BooksHandler(
 }
 
 type reqNewBookAuthor struct {
-	BookId   int `json:"bookID"`
-	AuthorId int `json:"authorID"`
+	BookID   int `json:"bookID"`
+	AuthorID int `json:"authorID"`
 }
 
 func NewBookAuthorHandler(
@@ -59,7 +59,7 @@ func NewBookAuthorHandler(
 		return
 	}
 
-	err = model.AddBookAuthor(dbx, req.BookId, req.AuthorId)
+	err = model.AddBookAuthor(dbx, req.BookID, req.AuthorID)
 	if hutil.ReportError(writer, err) {
 		return
 	}
@@ -68,8 +68,8 @@ func NewBookAuthorHandler(
 }
 
 type reqDeleteBookAuthor struct {
-	BookId   int `json:"bookID"`
-	AuthorId int `json:"authorID"`
+	BookID   int `json:"bookID"`
+	AuthorID int `json:"authorID"`
 }
 
 func DeleteBookAuthorHandler(
@@ -82,7 +82,7 @@ func DeleteBookAuthorHandler(
 		return
 	}
 
-	err = model.RemoveBookAuthor(dbx, req.BookId, req.AuthorId)
+	err = model.RemoveBookAuthor(dbx, req.BookID, req.AuthorID)
 	if hutil.ReportError(writer, err) {
 		return
 	}

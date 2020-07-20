@@ -7,7 +7,7 @@ import (
 )
 
 type Author struct {
-	Id        int       `json:"id"`
+	ID        int       `json:"id"`
 	Name      string    `json:"name"`
 	URL       string    `json:"url"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`

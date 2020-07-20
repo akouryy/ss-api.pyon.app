@@ -18,16 +18,16 @@ type reqNewAuthor struct {
 
 func (author *reqNewAuthor) validate() error {
 	if author.Name == "" {
-		return errors.New("Author name must be nonempty.")
+		return errors.New("author name must be nonempty")
 	}
 	if 30 < len(author.Name) {
-		return errors.New("Author name must be at most 30 characters.")
+		return errors.New("author name must be at most 30 characters")
 	}
 	if author.URL == "" {
-		return errors.New("Author URL must be nonempty.")
+		return errors.New("author URL must be nonempty")
 	}
 	if 300 < len(author.URL) {
-		return errors.New("Author name must be at most 300 characters.")
+		return errors.New("author name must be at most 300 characters")
 	}
 	return nil
 }

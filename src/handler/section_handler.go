@@ -13,16 +13,16 @@ import (
 
 type reqNewSection struct {
 	Content   string `json:"content"`
-	EpisodeId int    `json:"episodeID"`
+	EpisodeID int    `json:"episodeID"`
 	IndexNum  int    `json:"index"`
 }
 
 func (section *reqNewSection) validate() error {
 	if section.Content == "" {
-		return errors.New("Section content must be nonempty.")
+		return errors.New("section content must be nonempty")
 	}
 	if section.IndexNum <= 0 {
-		return errors.New("Section index must be at least 1.")
+		return errors.New("section index must be at least 1")
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func NewSectionHandler(
 		return
 	}
 
-	err = model.CreateSection(dbx, req.Content, req.EpisodeId, req.IndexNum)
+	err = model.CreateSection(dbx, req.Content, req.EpisodeID, req.IndexNum)
 	if hutil.ReportError(writer, err) {
 		return
 	}

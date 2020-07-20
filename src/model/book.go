@@ -10,7 +10,7 @@ import (
 )
 
 type Book struct {
-	Id        int       `json:"id"`
+	ID        int       `json:"id"`
 	Title     string    `json:"title"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Authors   []Author  `json:"authors"`
@@ -22,9 +22,10 @@ type bookAndAuthor struct {
 	Author Author
 }
 
-func GetBook(dbx *sqlx.DB, bookId int) (Book, error) {
+// GetBook fetches an book with its authors and optionally with its episodes.
+func GetBook(dbx *sqlx.DB, bookID int, withEpisode bool) (Book, error) {
 	var book Book
-	err := dbx.Get(&book, `SELECT * FROM books WHERE id = ?`, bookId)
+	err := dbx.Get(&book, `SELECT * FROM books WHERE id = ?`, bookID)
 	if err != nil {
 		return Book{}, err
 	}
@@ -33,13 +34,15 @@ func GetBook(dbx *sqlx.DB, bookId int) (Book, error) {
 		INNER JOIN
 			(SELECT * FROM book_authors WHERE book_id = ?) AS book_authors
 			ON authors.id = book_authors.author_id
-	`, bookId)
+	`, bookID)
 	if err != nil {
 		return Book{}, err
 	}
-	book.Episodes, err = GetEpisodes(dbx, bookId)
-	if err != nil {
-		return Book{}, err
+	if withEpisode {
+		book.Episodes, err = GetEpisodes(dbx, bookID)
+		if err != nil {
+			return Book{}, err
+		}
 	}
 	return book, nil
 }
@@ -68,10 +71,10 @@ func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := booksMap[row.Book.Id]; !ok {
-			booksMap[row.Book.Id] = &row.Book
+		if _, ok := booksMap[row.Book.ID]; !ok {
+			booksMap[row.Book.ID] = &row.Book
 		}
-		book := booksMap[row.Book.Id]
+		book := booksMap[row.Book.ID]
 		book.Authors = append(book.Authors, row.Author)
 	}
 
@@ -85,32 +88,32 @@ func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 	return books, nil
 }
 
-func AddBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
+func AddBookAuthor(dbx *sqlx.DB, bookID, authorID int) error {
 	_, err := dbx.Exec(
 		`INSERT INTO book_authors(book_id, author_id) VALUES (?, ?)`,
-		bookId, authorId,
+		bookID, authorID,
 	)
 	return err
 }
 
-func RemoveBookAuthor(dbx *sqlx.DB, bookId, authorId int) error {
+func RemoveBookAuthor(dbx *sqlx.DB, bookID, authorID int) error {
 	return mutil.Transaction(dbx, func(tx *sqlx.Tx) error {
-		_, err := dbx.Exec(`SELECT id FROM books WHERE id = ? FOR UPDATE`, bookId)
+		_, err := dbx.Exec(`SELECT id FROM books WHERE id = ? FOR UPDATE`, bookID)
 		if err != nil {
 			return err
 		}
 
 		var cnt int
-		err = dbx.Get(&cnt, `SELECT COUNT(*) FROM book_authors WHERE book_id = ?`, bookId)
+		err = dbx.Get(&cnt, `SELECT COUNT(*) FROM book_authors WHERE book_id = ?`, bookID)
 		if err != nil {
 			return err
 		}
 		if cnt <= 1 {
-			return errors.New("There must remain some authors for this book.")
+			return errors.New("there must remain some authors for this book")
 		}
 
 		_, err = dbx.Exec(
-			`DELETE FROM book_authors WHERE book_id = ? AND author_id = ?`, bookId, authorId,
+			`DELETE FROM book_authors WHERE book_id = ? AND author_id = ?`, bookID, authorID,
 		)
 
 		return err
