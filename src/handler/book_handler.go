@@ -14,6 +14,7 @@ type reqBook struct {
 	BookID int `json:"bookID"`
 }
 
+// BookHandler handles /book/show and responds with a book.
 func BookHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,
@@ -32,6 +33,7 @@ func BookHandler(
 	hutil.RenderJSON(writer, book)
 }
 
+// BooksHandler handles /book/list and responds with the latest books.
 func BooksHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,
@@ -49,6 +51,7 @@ type reqNewBookAuthor struct {
 	AuthorID int `json:"authorID"`
 }
 
+// NewBookAuthorHandler handles /book/author/new and registers a book author.
 func NewBookAuthorHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,
@@ -72,6 +75,7 @@ type reqDeleteBookAuthor struct {
 	AuthorID int `json:"authorID"`
 }
 
+// DeleteBookAuthorHandler handles /book/author/delete and unregisters the book author.
 func DeleteBookAuthorHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,

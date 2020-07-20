@@ -27,6 +27,7 @@ func (section *reqNewSection) validate() error {
 	return nil
 }
 
+// NewSectionHandler handles /section/new and creates a section.
 func NewSectionHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,

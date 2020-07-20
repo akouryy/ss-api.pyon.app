@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Episode is an episode in a book.
 type Episode struct {
 	ID        int       `json:"id"`
 	Title     string    `json:"title"`
@@ -21,8 +22,8 @@ type BookEpi struct {
 	Episode Episode `json:"episode"`
 }
 
-// GetEpisodeWithBook fetches an episode w/ its sections,
-// along with the containing book w/o its episodes.
+// GetEpisodeWithBook fetches (1) an episode with its sections, and
+// (2) the containing book without its episodes.
 func GetEpisodeWithBook(dbx *sqlx.DB, episodeID int) (BookEpi, error) {
 	var episode Episode
 	err := dbx.Get(&episode, `SELECT * FROM episodes WHERE id = ?`, episodeID)
@@ -42,6 +43,7 @@ func GetEpisodeWithBook(dbx *sqlx.DB, episodeID int) (BookEpi, error) {
 	return BookEpi{book, episode}, nil
 }
 
+// GetEpisodes fetches the episodes of a book, without its sections.
 func GetEpisodes(dbx *sqlx.DB, bookID int) ([]Episode, error) {
 	episodes := []Episode{}
 	err := dbx.Select(&episodes,
@@ -52,6 +54,7 @@ func GetEpisodes(dbx *sqlx.DB, bookID int) ([]Episode, error) {
 	return episodes, nil
 }
 
+// CreateEpisode creates a new episode.
 func CreateEpisode(dbx *sqlx.DB, title string, bookID, indexnum int) error {
 	_, err := dbx.Exec(
 		`INSERT INTO episodes(title, book_id, indexnum, created_at) VALUES (?, ?, ?, NOW())`,

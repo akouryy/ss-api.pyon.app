@@ -34,6 +34,7 @@ func (episode *reqNewEpisode) validate() error {
 	return nil
 }
 
+// EpisodeHandler handles /episode/show and responds with an episode.
 func EpisodeHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,
@@ -52,6 +53,7 @@ func EpisodeHandler(
 	hutil.RenderJSON(writer, bookEpi)
 }
 
+// NewEpisodeHandler handles /episode/new and creates an episode.
 func NewEpisodeHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,

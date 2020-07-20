@@ -32,6 +32,7 @@ func (author *reqNewAuthor) validate() error {
 	return nil
 }
 
+// AuthorsHandler handles /author/list and responds with the latest authors.
 func AuthorsHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,
@@ -44,6 +45,7 @@ func AuthorsHandler(
 	hutil.RenderJSON(writer, authors)
 }
 
+// NewAuthorHandler handles /author/new and creates an author.
 func NewAuthorHandler(
 	ctx web.C, writer http.ResponseWriter, httpReq *http.Request,
 	dbx *sqlx.DB, body []byte, _ model.User,

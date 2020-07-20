@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Book is a nutritious book.
 type Book struct {
 	ID        int       `json:"id"`
 	Title     string    `json:"title"`
@@ -47,6 +48,7 @@ func GetBook(dbx *sqlx.DB, bookID int, withEpisode bool) (Book, error) {
 	return book, nil
 }
 
+// GetBooks fetches the latest books with their authors but without their episodes.
 func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 	booksMap := map[int]*Book{}
 
@@ -88,6 +90,7 @@ func GetBooks(dbx *sqlx.DB) ([]Book, error) {
 	return books, nil
 }
 
+// AddBookAuthor registers an existing Author as an author of an existing Book.
 func AddBookAuthor(dbx *sqlx.DB, bookID, authorID int) error {
 	_, err := dbx.Exec(
 		`INSERT INTO book_authors(book_id, author_id) VALUES (?, ?)`,
@@ -96,6 +99,7 @@ func AddBookAuthor(dbx *sqlx.DB, bookID, authorID int) error {
 	return err
 }
 
+// RemoveBookAuthor unregisters an Author from the authors of a Book.
 func RemoveBookAuthor(dbx *sqlx.DB, bookID, authorID int) error {
 	return mutil.Transaction(dbx, func(tx *sqlx.Tx) error {
 		_, err := dbx.Exec(`SELECT id FROM books WHERE id = ? FOR UPDATE`, bookID)

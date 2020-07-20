@@ -22,6 +22,8 @@ var allowedOrigins = map[string]struct{}{
 	"https://ss.pyon.app":   struct{}{},
 }
 
+// CORSMiddleware is a Goji middleware
+// adding headers about Cross-Origin Resource Sharing.
 func CORSMiddleware() func(*web.C, http.Handler) http.Handler {
 	return func(ctx *web.C, httpHandler http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, httpReq *http.Request) {
@@ -39,10 +41,7 @@ func CORSMiddleware() func(*web.C, http.Handler) http.Handler {
 	}
 }
 
-func DBX(ctx *web.C) *sqlx.DB {
-	return ctx.Env["dbx"].(*sqlx.DB)
-}
-
+// ReadWholeBody stores the entire request body into a byte array.
 func ReadWholeBody(httpReq *http.Request) ([]byte, error) {
 	size, err := strconv.Atoi(httpReq.Header.Get("Content-Length"))
 	if err != nil {
@@ -56,6 +55,7 @@ func ReadWholeBody(httpReq *http.Request) ([]byte, error) {
 	return body, nil
 }
 
+// RenderJSON stringifies `data` as JSON and writes it to the response.
 func RenderJSON(w http.ResponseWriter, data interface{}) {
 	j, err := json.Marshal(data)
 	if ReportError(w, err) {
@@ -65,10 +65,12 @@ func RenderJSON(w http.ResponseWriter, data interface{}) {
 	io.WriteString(w, string(j))
 }
 
+// ReportOK writes an nullary successful JSON string to the response.
 func ReportOK(w http.ResponseWriter) {
 	fmt.Fprint(w, `{"ok":true}`)
 }
 
+// ReportError writes an JSON string containing the error message to the response.
 func ReportError(w http.ResponseWriter, err error) bool {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -76,9 +78,8 @@ func ReportError(w http.ResponseWriter, err error) bool {
 		escaped, _ := json.Marshal(err.Error())
 		fmt.Fprintf(w, `{"error":%s}`, escaped)
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 type reqAuth struct {
@@ -88,14 +89,16 @@ type reqAuth struct {
 
 func (req *reqAuth) validate() error {
 	if req.Nickname == "" {
-		return errors.New("Authenticate nickname must be nonempty.")
+		return errors.New("authenticate nickname must be nonempty")
 	}
 	if req.Password == "" {
-		return errors.New("Authenticate password must be nonempty.")
+		return errors.New("authenticate password must be nonempty")
 	}
 	return nil
 }
 
+// Authenticate confirms that the request is created by a registered user
+// and identifies her/him.
 func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 	var req reqAuth
 	err := json.Unmarshal(body, &req)
@@ -111,14 +114,14 @@ func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 	var user model.User
 	err = dbx.Get(&user, "SELECT * FROM users WHERE nickname = ?", req.Nickname)
 	if err == sql.ErrNoRows {
-		return model.User{}, errors.New("Wrong nickname or password.")
+		return model.User{}, errors.New("wrong nickname or password")
 	} else if err != nil {
 		return model.User{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return model.User{}, errors.New("Wrong nickname or password.")
+		return model.User{}, errors.New("wrong nickname or password")
 	}
 	if err != nil {
 		log.Println(err)
@@ -128,6 +131,7 @@ func Authenticate(body []byte, dbx *sqlx.DB) (model.User, error) {
 	return user, nil
 }
 
+// Wrap wraps a rich handler into a raw Goji handler.
 func Wrap(
 	dbx *sqlx.DB, raw func(web.C, http.ResponseWriter, *http.Request, *sqlx.DB, []byte, model.User),
 ) func(web.C, http.ResponseWriter, *http.Request) {
